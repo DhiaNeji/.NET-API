@@ -21,9 +21,8 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
             this._context = context;
             this.mapper = mapper;
         }
-        public ItemDto AddNewItem(ItemInputModel item)
+        public ItemDto AddNewItem(string email,ItemInputModel item)
         {
-            //Get the authenticated User
             User user = this._context.User.Where(u => u.Id == 1).First();
             System.Diagnostics.Debug.WriteLine(item.ConditionCode.ToString());
             ItemCondition itemCondition = this._context.ItemCondition.Where(i => i.Description.Equals(item.ConditionCode.ToString())).First();
@@ -33,7 +32,7 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
             {
                 ItemImage img = new ItemImage(l[i]);
             }
-            Item newItem = new Item("1", item.Title, item.Description, item.ShortDescription);
+            Item newItem = new Item("identifier", item.Title, item.Description, item.ShortDescription);
             newItem.Owner = user;
             newItem.ItemCondition = itemCondition;
             newItem.ItemImages = list;

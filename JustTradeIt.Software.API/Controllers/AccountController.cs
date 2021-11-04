@@ -14,6 +14,9 @@ using JWT;
 using JWT.Serializers;
 using JWT.Exceptions;
 using JustTradeIt.Software.API.Models.Helpers;
+using RabbitMQ.Client;
+using System.Net.Http;
+using System.Net;
 
 namespace JustTradeIt.Software.API.Controllers
 {
@@ -34,7 +37,7 @@ namespace JustTradeIt.Software.API.Controllers
             this._tokenService = tokenService;
         }
        
-
+        //Only the LogOut One
         [HttpPost("register")]
         public UserDto createUser(RegisterInputModel inputModel)
         {
@@ -50,7 +53,8 @@ namespace JustTradeIt.Software.API.Controllers
         [HttpGet("profile")]
         public UserDto getUser()
         {
-            return this._accoutService.GetProfileInformation();
+          UserDto user = (UserDto)HttpContext.Items["User"];
+          return this._accoutService.GetProfileInformation(user.Email);
         }
 
         [HttpPut("profile")]

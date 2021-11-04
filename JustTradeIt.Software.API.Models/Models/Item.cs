@@ -15,12 +15,13 @@ namespace JustTradeIt.Software.API.Models.Models
         public string ShortDescription { get; set; }
 
         public virtual ItemCondition ItemCondition { get; set; }
+
+        public int ownerId { get; set; }
         public virtual User Owner { get; set; }
 
         public ICollection<ItemImage> ItemImages { get; set; }
 
-        [NotMapped]
-        public IList<Trade> relatedTrades { get; set; }
+        public ICollection<TradeItem> relatedTradeItems = new System.Collections.ObjectModel.Collection<TradeItem>();
 
         public Item(string publicIdentifier, string tiltle, string description, 
             string shortDescription)
@@ -42,6 +43,10 @@ namespace JustTradeIt.Software.API.Models.Models
             ItemCondition = itemCondition;
             Owner = owner;
             ItemImages = itemImages;
+        }
+        public void setRelatedTradeItems(TradeItem tr)
+        {
+            this.relatedTradeItems.Add(tr);
         }
     }
 }

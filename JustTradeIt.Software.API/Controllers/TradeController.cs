@@ -28,12 +28,7 @@ namespace JustTradeIt.Software.API.Controllers
             this._ITradeRepository = tradeRepository;
         }
 
-        [HttpGet]
-        public IEnumerable<TradeDto> getAuthenticatedUserTrades()
-        {
-            //To be implemented with the Auth User
-            return this._tradeService.GetTrades("dhia666@gmail.com");
-        }
+
 
         [HttpPost("{email}")]
         public string CreateNewTrade(string email,TradeInputModel trade)
@@ -51,6 +46,12 @@ namespace JustTradeIt.Software.API.Controllers
         public void getDetailedTrade(string identifier,string email, [FromBody]TradeStatus tradeStatus)
         {
             this._tradeService.UpdateTradeRequest(identifier,email,tradeStatus);
+        }
+        [HttpGet]
+        public IEnumerable<TradeDto> getAuthenticatedUserTrades(bool onlyIncludeActive)
+        {
+            string email = "dhia666@gmail.com";
+            return this._tradeService.GetTradeRequests(email, onlyIncludeActive);
         }
     }
 }

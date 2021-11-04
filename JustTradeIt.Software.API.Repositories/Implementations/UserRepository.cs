@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Web.Http;
 using AutoMapper;
@@ -9,6 +10,7 @@ using JustTradeIt.Software.API.Models.DTOs;
 using JustTradeIt.Software.API.Models.InputModels;
 using JustTradeIt.Software.API.Models.Models;
 using JustTradeIt.Software.API.Repositories.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace JustTradeIt.Software.API.Repositories.Implementations
 {
@@ -29,10 +31,9 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
 
         public UserDto CreateUser(RegisterInputModel inputModel)
         {
-            if(!this.findByEmail(inputModel.Email))
+            if (!this.findByEmail(inputModel.Email))
             {
                 string hashedPassword = this.HashUsingPbkdf2(inputModel.Password);
-                //Add the Auth new Token and save it to database
                 User newUser = new User(null, inputModel.FullName, inputModel.Email, null, hashedPassword);
                 this.context.User.Add(newUser);
                 this.context.SaveChanges();
@@ -49,9 +50,9 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
             }
         }
 
-        public UserDto GetProfileInformation()
+        public UserDto GetProfileInformation(string email)
         {
-            User user = context.User.Where(u => u.Id == 1).First(); // To be implemented with JWT
+            User user = context.User.Where(u => u.Email == email).First(); 
             System.Diagnostics.Debug.WriteLine(this.context.User.Count());
             UserDto userDto = this._mapper.Map<UserDto>(user);
             return userDto;

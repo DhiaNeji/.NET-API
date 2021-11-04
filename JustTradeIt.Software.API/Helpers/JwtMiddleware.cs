@@ -63,6 +63,8 @@ namespace JustTradeIt.Software.API.Models.Helpers
                 {
                     context.Items["BlackListed"] = 1;
                 }
+                else
+                    context.Items["BlackListed"] = 0;
             }
             catch
             {

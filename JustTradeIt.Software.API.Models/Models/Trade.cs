@@ -11,6 +11,16 @@ namespace JustTradeIt.Software.API.Models.Models
 {
     public class Trade
     {
+        private string v;
+        private DateTime now1;
+        private DateTime now2;
+        private string fullName;
+        private TradeStatus pending;
+
+        public Trade()
+        {
+        }
+
         [Key]
         public int Id { get; set; }
 
@@ -23,25 +33,22 @@ namespace JustTradeIt.Software.API.Models.Models
         public String ModifiedBy { get; set; }
 
         public TradeStatus TradeStatus { get; set; }
-        [ForeignKey("ReceiverId")]
         public int ReceiverId { get; set; }
-        public virtual User Receiver { get; set; }
-        [ForeignKey("SenderId")]
+        public User Receiver { get; set; }
         public int SenderId { get; set; }
-        public virtual User Sender { get; set; }
+        public User Sender { get; set; }
+        
+        public ICollection<TradeItem> RelatedtradeItems { get; set; }
 
-        public IList<Item> SendingtradeItems { get; set; }
-
-        public IList<Item> ReceivingtradeItems { get; set; }
-
-        public Trade(string publicIdentifier, DateTime issueDate, DateTime modifiedDate, string modifiedBy, 
-            TradeStatus tradeStatus)
+        public Trade(string publicIdentifier, DateTime issueDate, DateTime modifiedDate, string modifiedBy, TradeStatus tradeStatus, User receiver, User sender)
         {
             PublicIdentifier = publicIdentifier;
             IssueDate = issueDate;
             ModifiedDate = modifiedDate;
             ModifiedBy = modifiedBy;
             TradeStatus = tradeStatus;
+            Receiver = receiver;
+            Sender = sender;
         }
     }
 }

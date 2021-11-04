@@ -21,7 +21,7 @@ namespace JustTradeIt.Software.API.Services.Implementations
         }
         public ItemDto AddNewItem(string email, ItemInputModel item)
         {
-            return this._itemRepository.AddNewItem(item);
+            return this._itemRepository.AddNewItem(email,item);
         }
 
         public ItemDetailsDto GetItemByIdentifier(string identifier)

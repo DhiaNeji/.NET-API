@@ -11,7 +11,7 @@ namespace JustTradeIt.Software.API.Repositories.Interfaces
     {
         Envelope<ItemDto> GetAllItems(int pageSize, int pageNumber, bool ascendingSortOrder);
         ItemDetailsDto GetItemByIdentifier(string identifier);
-        ItemDto AddNewItem(ItemInputModel item);
+        ItemDto AddNewItem(string email,ItemInputModel item);
         void RemoveItem(string email, string identifier);
 
     }

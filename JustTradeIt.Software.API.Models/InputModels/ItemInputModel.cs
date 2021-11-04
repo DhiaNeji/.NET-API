@@ -9,7 +9,7 @@ namespace JustTradeIt.Software.API.Models.InputModels
 {
    public enum Condition
     {
-        GOOD, MINT, USED, BAD,
+        MINT, GOOD, USED, BAD,
 DAMAGED
     }
   public   class ItemInputModel

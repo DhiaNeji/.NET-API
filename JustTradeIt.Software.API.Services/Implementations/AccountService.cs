@@ -32,24 +32,20 @@ namespace JustTradeIt.Software.API.Services.Implementations
             if (user.hashedPassword != HashedPassword)
                 return null;
             string token = this.tokenService.GenerateJwtToken(this._mapper.Map<UserDto>(user));
-            System.Diagnostics.Debug.WriteLine(token);
             return this._mapper.Map<UserDto>(user);
         }
 
         public UserDto CreateUser(RegisterInputModel inputModel)
         {
-            System.Diagnostics.Debug.WriteLine("line 1");
             UserDto userDto= this.userRepository.CreateUser(inputModel);
-            System.Diagnostics.Debug.WriteLine("line 2");
             this.tokenService.GenerateJwtToken(userDto);
-            System.Diagnostics.Debug.WriteLine("line 3");
             return userDto;
         }
 
 
-        public UserDto GetProfileInformation()
+        public UserDto GetProfileInformation(string email)
         {
-            return this.userRepository.GetProfileInformation();
+            return this.userRepository.GetProfileInformation(email);
         }
 
         public void Logout(int tokenId)

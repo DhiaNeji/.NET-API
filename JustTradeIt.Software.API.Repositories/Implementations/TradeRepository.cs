@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using AutoMapper;
 using JustTradeIt.Software.API.Models.DTOs;
@@ -28,57 +29,86 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
             User receiver = this._context.User.Where(u => u.Id == int.Parse(trade.ReceiverIdentifier)).First();
             bool validateSenderAndReceiver = true;
             List<Item> list = new List<Item>();
-            List<Item> list2 = new List<Item>();
+            List<TradeItem> list2 = new List<TradeItem>();
             Trade t=null;
+            t = new Trade("id", DateTime.Now, DateTime.Now, sender.FullName, TradeStatus.Pending, receiver, sender);
+
             for (int i=0;i<itemsToTrade.Count();i++)
             {
-                if(int.Parse(itemsToTrade[i].Owner.Identifier)!=sender.Id && int.Parse(itemsToTrade[i].Owner.Identifier) != receiver.Id)
+                if (int.Parse(itemsToTrade[i].Owner.Identifier)==sender.Id )
                 {
-                    validateSenderAndReceiver = false;
+                    string itemToTradeId = itemsToTrade[i].Identifier;
+                    Item it = this._context.Item.Where(i => i.Id == int.Parse(itemToTradeId)).First();
+                    TradeItem tr = new TradeItem(t, it, sender);
+                    it.setRelatedTradeItems(tr);
+                    this._context.Item.Update(it);
+                    this._context.SaveChanges();
+                    System.Diagnostics.Debug.WriteLine("done");
+
                 }
                 else
                 {
-                    int identifier = int.Parse(itemsToTrade[i].Identifier);
-                    Item itemToTrade=this._context.Item.Where(i => i.Id == identifier).First();
-                    if (itemToTrade.Owner == sender)
-                        list.Add(itemToTrade);
+                    if(int.Parse(itemsToTrade[i].Owner.Identifier) == receiver.Id)
+                    {
+                        string itemToTradeId = itemsToTrade[i].Identifier;
+                        Item it = this._context.Item.Where(i => i.Id == int.Parse(itemToTradeId)).First();
+                        TradeItem tr = new TradeItem(t, it, receiver);
+                        it.setRelatedTradeItems(tr);
+                        this._context.Item.Update(it);
+                        this._context.SaveChanges();
+                    }
                     else
-                        list2.Add(itemToTrade);
+                    {
+                        System.Diagnostics.Debug.WriteLine("on ELSE statement");
+                    }
                 }
             }
-            if(validateSenderAndReceiver)
-            {
-                //ItemCondition itemCondition = this._context.ItemCondition.Where(i => i.ConditionCode == TradeStatus.Pending.ToString()).First();
+            //if(validateSenderAndReceiver)
+            //{
+            //ItemCondition itemCondition = this._context.ItemCondition.Where(i => i.ConditionCode == TradeStatus.Pending.ToString()).First();
 
-                t = new Trade("id", DateTime.Now, DateTime.Now, sender.FullName, TradeStatus.Pending);
-                t.Sender = sender;
-                t.Receiver = receiver;
-                t.SendingtradeItems = list;
-                t.ReceivingtradeItems = list2;
-                this._context.Trade.Add(t);
-                this._context.SaveChanges();
-            }
+            //t = new Trade("id", DateTime.Now, DateTime.Now, sender.FullName, TradeStatus.Pending);
+            //t.Sender = sender;
+            //t.Receiver = receiver;
+            //t.RelatedtradeItems = list;
+            //  t.ReceivingtradeItems = list2;
+            //this._context.Trade.Add(t);
+            //this._context.SaveChanges();
+            //}
             return t.Id.ToString();
         }
 
         public TradeDetailsDto GetTradeByIdentifier(string identifier)
         {
-            Trade t = this._context.Trade.Include(t=>t.Sender).Include(t=>t.Receiver).Include(t=>t.ReceivingtradeItems).Include(t => t.SendingtradeItems).Where(t => t.Id == int.Parse(identifier)).First();
-            return this.mapper.Map<TradeDetailsDto>(t);
+            Trade t = this._context.Trade.Include(t=>t.Sender).Include(t=>t.Receiver).Include(t=>t.RelatedtradeItems).Include(t=>t.RelatedtradeItems).Where(t => t.Id == int.Parse(identifier)).First();
+            List<TradeItem> trr = this._context.TradeItem.Include(tr=>tr.item).Where(tr => tr.TradeId == t.Id).ToList();
+            ICollection<TradeItem> tr = t.RelatedtradeItems;
+            ICollection<ItemDto> sentItems = new Collection<ItemDto>();
+            ICollection<ItemDto> receivedItems = new Collection<ItemDto>();
+            List<TradeItem> l=tr.ToList();
+            for(int i=0;i<l.Count;i++)
+            {
+                if (t.Sender.Id == l[i].item.Owner.Id)
+                    sentItems.Add(this.mapper.Map<ItemDto>(l[i].item));
+                else
+                    receivedItems.Add(this.mapper.Map<ItemDto>(l[i].item));
+            }
+            TradeDetailsDto tradeDetailDto = new TradeDetailsDto(receivedItems,sentItems,this.mapper.Map<UserDto>(t.Receiver),this.mapper.Map<UserDto>(t.Sender), t.IssueDate,t.Id.ToString(),t.IssueDate,t.ModifiedDate,t.ModifiedBy,t.TradeStatus);
+            return tradeDetailDto;
         }
 
         public IEnumerable<TradeDto> GetTradeRequests(string email, bool onlyIncludeActive)
         {
-            User user = (User)this._context.User.Where(u => u.Email == email); 
-            List<Trade> l=new List<Trade>();
+            User user = this._context.User.Where(u => u.Email.Equals(email)).First();
+            List<TradeItem> l = this._context.TradeItem.Include(t=>t.trade).Where(u => u.user.Id == user.Id).ToList();
             if (onlyIncludeActive)
             {
-                l = user.userTrades.Where(t => t.TradeStatus != Models.Enums.TradeStatus.Accepted).ToList();
+               l = l.Where(t => t.trade.TradeStatus != Models.Enums.TradeStatus.Accepted).ToList();
             }
             List<TradeDto> list = new List<TradeDto>();
             for(int i=0;i<l.Count();i++)
             {
-                list.Add(this.mapper.Map<TradeDto>(l[i]));
+                list.Add(this.mapper.Map<TradeDto>(l[i].trade));
             }
             return list;
         }

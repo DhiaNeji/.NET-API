@@ -1,5 +1,6 @@
 using JustTradeIt.Software.API.Models;
 using JustTradeIt.Software.API.Models.DTOs;
+using JustTradeIt.Software.API.Models.Helpers;
 using JustTradeIt.Software.API.Models.InputModels;
 using JustTradeIt.Software.API.Models.Models;
 using JustTradeIt.Software.API.Repositories.Interfaces;
@@ -35,10 +36,12 @@ namespace JustTradeIt.Software.API.Controllers
             return this._ItemService.GetItemByIdentifier(identifier);
         }
 
+        [Authorize]
         [HttpPost]
-        public ItemDto getItemByIdentifier(ItemInputModel itemInputModel)
+        public ItemDto createNewItem(ItemInputModel itemInputModel)
         {
-            return this._ItemService.AddNewItem(null, itemInputModel);
+            UserDto user = (UserDto)HttpContext.Items["User"];
+            return this._ItemService.AddNewItem(user.Email, itemInputModel);
         }
 
         [HttpDelete("{itemIdentifier}/{email}")]

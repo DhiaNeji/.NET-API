@@ -10,13 +10,37 @@ namespace JustTradeIt.Software.API.Models.Models
 {
    public class TradeItem
     {
-        public int tradeId { get; set; }
-        public virtual Trade trade { get; set; }
+        [Key]
+        [Column(Order = 1)]
+        public int TradeId { get; set; }
+        [NotMapped]
+        public Trade trade;
+        [Key]
+        [Column(Order = 2)]
+        public int ItemId { get; set; }
+        [NotMapped]
+        public Item item;
+        [Key]
+        [Column(Order = 3)]
+        public int UserId { get; set; }
+        [NotMapped]
+        public User user;
 
-        public int userID;
-        public virtual User user { get; set; }
-        public int itemId { get; set; }
-        public virtual Item item{ get; set; }
+        public TradeItem(Trade trade, Item item, User user)
+        {
+            this.trade = trade;
+            this.item = item;
+            this.user = user;
+        }
+        public TradeItem()
+        {
 
+        }
+        public TradeItem(int tradeId,int userId,int itemId)
+        {
+            this.ItemId = itemId;
+            this.TradeId = tradeId;
+            this.UserId = userId;
+        }
     }
 }

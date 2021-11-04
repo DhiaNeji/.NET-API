@@ -32,15 +32,27 @@ namespace JustTradeIt.Software.API.Repositories
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<TradeItem>().HasKey(c => new { c.itemId,c.tradeId,c.userID});
-            modelBuilder.Entity<Trade>()
-         .HasOne(t => t.Sender)
-         .WithMany(b => b.userTrade)
-         .HasForeignKey(t=>t.SenderId);
-            modelBuilder.Entity<Trade>()
-         .HasOne(t => t.Receiver)
-         .WithMany(b => b.userTrades)
-         .HasForeignKey(t => t.ReceiverId);
+            modelBuilder.Entity<Item>().HasOne(i => i.Owner).WithMany(u => u.relatedItems).HasForeignKey(i => i.ownerId);
+
+            modelBuilder.Entity<Trade>().HasOne(t => t.Sender).WithMany(u => u.SentTrades).HasForeignKey(t => t.SenderId);
+
+            modelBuilder.Entity<Trade>().HasOne(t => t.Receiver).WithMany(u => u.ReceivedTrades).HasForeignKey(t => t.ReceiverId);
+            modelBuilder.Entity<TradeItem>().HasKey(ti => new { ti.ItemId, ti.TradeId });
+
+            modelBuilder.Entity<TradeItem>()
+           .HasOne(ti => ti.item)
+           .WithMany(i => i.relatedTradeItems)
+           .HasForeignKey(ti => ti.ItemId);
+
+            modelBuilder.Entity<TradeItem>()
+                .HasOne(ti => ti.trade)
+                .WithMany(t => t.RelatedtradeItems)
+                .HasForeignKey(ti => ti.TradeId);
+
+            modelBuilder.Entity<TradeItem>()
+               .HasOne(ti => ti.user)
+               .WithMany(u => u.RelatedTradeItems)
+               .HasForeignKey(ti => ti.UserId);
         }
     }
 }

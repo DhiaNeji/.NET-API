@@ -10,10 +10,10 @@ namespace JustTradeIt.Software.API.Models.InputModels
 {
    public  class TradeInputModel
     {
-        [Required]
+        //[Required]
         public string ReceiverIdentifier { get; set; }
 
-        [Required]
+        //[Required]
         public IEnumerable<ItemDto> ItemsInTrade { get; set; }
     }
 }
