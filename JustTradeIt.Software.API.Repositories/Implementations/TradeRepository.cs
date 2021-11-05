@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
 using AutoMapper;
 using JustTradeIt.Software.API.Models.DTOs;
 using JustTradeIt.Software.API.Models.Enums;
@@ -27,7 +30,9 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
             List<ItemDto> itemsToTrade = trade.ItemsInTrade.ToList();
             User sender = this._context.User.Where(u => u.Email == email).First();
             User receiver = this._context.User.Where(u => u.Id == int.Parse(trade.ReceiverIdentifier)).First();
-            bool validateSenderAndReceiver = true;
+            bool itemSenderExist = false;
+            bool itemReceiverExist = false;
+            bool itemStranger = true;
             List<Item> list = new List<Item>();
             List<TradeItem> list2 = new List<TradeItem>();
             Trade t=null;
@@ -42,9 +47,7 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
                     TradeItem tr = new TradeItem(t, it, sender);
                     it.setRelatedTradeItems(tr);
                     this._context.Item.Update(it);
-                    this._context.SaveChanges();
-                    System.Diagnostics.Debug.WriteLine("done");
-
+                    itemSenderExist = true;
                 }
                 else
                 {
@@ -55,26 +58,27 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
                         TradeItem tr = new TradeItem(t, it, receiver);
                         it.setRelatedTradeItems(tr);
                         this._context.Item.Update(it);
-                        this._context.SaveChanges();
+                        itemReceiverExist = true;
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine("on ELSE statement");
+                        itemStranger = false;
                     }
                 }
             }
-            //if(validateSenderAndReceiver)
-            //{
-            //ItemCondition itemCondition = this._context.ItemCondition.Where(i => i.ConditionCode == TradeStatus.Pending.ToString()).First();
-
-            //t = new Trade("id", DateTime.Now, DateTime.Now, sender.FullName, TradeStatus.Pending);
-            //t.Sender = sender;
-            //t.Receiver = receiver;
-            //t.RelatedtradeItems = list;
-            //  t.ReceivingtradeItems = list2;
-            //this._context.Trade.Add(t);
-            //this._context.SaveChanges();
-            //}
+            if(itemReceiverExist && itemReceiverExist &&itemStranger)
+            {
+                this._context.SaveChanges();
+            }
+            else
+            {
+                var response = new HttpResponseMessage(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent("Please Verify The trading Items", System.Text.Encoding.UTF8, "text/plain"),
+                    StatusCode = HttpStatusCode.BadRequest
+                };
+                throw new HttpResponseException(response);
+            }
             return t.Id.ToString();
         }
 
@@ -103,7 +107,7 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
             List<TradeItem> l = this._context.TradeItem.Include(t=>t.trade).Where(u => u.user.Id == user.Id).ToList();
             if (onlyIncludeActive)
             {
-               l = l.Where(t => t.trade.TradeStatus != Models.Enums.TradeStatus.Accepted).ToList();
+                l = l.Where(t => t.trade.TradeStatus != Models.Enums.TradeStatus.Accepted).ToList();
             }
             List<TradeDto> list = new List<TradeDto>();
             for(int i=0;i<l.Count();i++)
@@ -117,7 +121,6 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
         {
             User user = this._context.User.Where(u => u.Email == email).First();
             Trade t = this._context.Trade.Where(t => t.Sender == user).First();
-            System.Diagnostics.Debug.WriteLine(t.TradeStatus);
             List<Trade> trades = this._context.Trade.Where(t => t.Sender == user).Where(t => t.TradeStatus == Models.Enums.TradeStatus.Accepted).ToList();
             List<TradeDto> list = new List<TradeDto>();
             for (int i = 0; i < trades.Count(); i++)
@@ -141,7 +144,7 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
 
         public String UpdateTradeRequest(string identifier, string email, Models.Enums.TradeStatus newStatus)
         {
-            Trade trade= this._context.Trade.Include(t=>t.Sender).Include(t => t.Receiver).Where(u => u.Id == int.Parse(identifier)).First();
+            Trade trade= this._context.Trade.Include(t=>t.Sender).Include(t=>t.RelatedtradeItems).Include(t => t.Receiver).Where(u => u.Id == int.Parse(identifier)).First();
             User user = this._context.User.Where(u => u.Email == email).First();
             if (trade.TradeStatus==Models.Enums.TradeStatus.Pending)
             {
@@ -152,32 +155,73 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
                         trade.TradeStatus = newStatus;
                         trade.ModifiedDate = DateTime.Now;
                         trade.ModifiedBy = user.FullName;
+                        trade.RelatedtradeItems.Clear();
                     }
                     else
                     {
-                        throw new Exception("You cannot perform this action");
+                        var response = new HttpResponseMessage(HttpStatusCode.BadRequest)
+                        {
+                            Content = new StringContent("As a sender, you can only cancel a trade request", System.Text.Encoding.UTF8, "text/plain"),
+                            StatusCode = HttpStatusCode.BadRequest
+                        };
+                        throw new HttpResponseException(response);
                     }
                 }
                 if (trade.Receiver == user)
                 {
-                    if (newStatus == Models.Enums.TradeStatus.Declined || newStatus == Models.Enums.TradeStatus.Accepted)
-                    { 
+                    if (newStatus == Models.Enums.TradeStatus.Declined)
+                    {
                         trade.TradeStatus = newStatus;
                         trade.ModifiedDate = DateTime.Now;
                         trade.ModifiedBy = user.FullName;
+                        trade.RelatedtradeItems.Clear();
                     }
                     else
                     {
-                        throw new Exception("You cannot perform this action");
+                        if(newStatus == Models.Enums.TradeStatus.Accepted)
+                        {
+                            trade.TradeStatus = newStatus;
+                            trade.ModifiedDate = DateTime.Now;
+                            trade.ModifiedBy = user.FullName;
+                            List<TradeItem> trr = this._context.TradeItem.Include(tr => tr.item).Where(tr => tr.TradeId == trade.Id).ToList();
+                            ICollection<ItemDto> sentItems = new Collection<ItemDto>();
+                            ICollection<ItemDto> receivedItems = new Collection<ItemDto>();
+                            ICollection<TradeItem> tr = trade.RelatedtradeItems;
+                            List<TradeItem> l = tr.ToList();
+                            for (int i = 0; i < l.Count; i++)
+                            {
+                                if (trade.Sender.Id == l[i].item.Owner.Id)
+                                    l[i].item.Owner = trade.Receiver;
+                                else
+                                    l[i].item.Owner = trade.Sender;
+                                this._context.Item.Update(l[i].item);
+                            }
+                            trade.RelatedtradeItems.Clear();
+                        }
+                        else
+                        {
+                            var response = new HttpResponseMessage(HttpStatusCode.BadRequest)
+                            {
+                                Content = new StringContent("As a receive, you can only accept or decline a Trade", System.Text.Encoding.UTF8, "text/plain"),
+                                StatusCode = HttpStatusCode.BadRequest
+                            };
+                            throw new HttpResponseException(response);
+                        }
+                   
                     }
                 }
             }
             else
             {
-                throw new Exception("Status is not on pending");
+                var response = new HttpResponseMessage(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent("You cannot perform this action", System.Text.Encoding.UTF8, "text/plain"),
+                    StatusCode = HttpStatusCode.BadRequest
+                };
+                throw new HttpResponseException(response);
             }
             this._context.SaveChanges();
-            return trade.TradeStatus.ToString(); //To be performed when DTO is done
+            return trade.TradeStatus.ToString();
         }
     }
 }

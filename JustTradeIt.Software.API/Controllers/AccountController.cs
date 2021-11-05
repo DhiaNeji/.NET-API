@@ -17,6 +17,8 @@ using JustTradeIt.Software.API.Models.Helpers;
 using RabbitMQ.Client;
 using System.Net.Http;
 using System.Net;
+using System.IO;
+using Microsoft.Extensions.Primitives;
 
 namespace JustTradeIt.Software.API.Controllers
 {
@@ -29,15 +31,17 @@ namespace JustTradeIt.Software.API.Controllers
 
         private TokenService _tokenService;
 
+        private ImageService imageService;
+
         private IUserRepository _IUserRepository;
-        public AccountController(AccountService _accoutService, IUserRepository _IUserRepository,TokenService tokenService)
+        public AccountController(AccountService _accoutService, IUserRepository _IUserRepository,TokenService tokenService,ImageService imageService)
         {
             this._accoutService = _accoutService;
             this._IUserRepository = _IUserRepository;
             this._tokenService = tokenService;
+            this.imageService = imageService;
         }
        
-        //Only the LogOut One
         [HttpPost("register")]
         public UserDto createUser(RegisterInputModel inputModel)
         {
@@ -57,52 +61,29 @@ namespace JustTradeIt.Software.API.Controllers
           return this._accoutService.GetProfileInformation(user.Email);
         }
 
+        [Authorize]
         [HttpPut("profile")]
-        public UserDto updateUser(ProfileInputModel profileInputModel)
+        public UserDto updateUser()
         {
-            return this._accoutService.UpdateProfile(profileInputModel);
+            var filePath = Path.GetTempFileName();
+            StringValues FullName="";
+            HttpContext.Request.Form.TryGetValue("FullName",out FullName);
+            if (filePath.Length < 0)
+            {
+                return null;
+            }
+            UserDto user = (UserDto)HttpContext.Items["User"];
+            string imgUrl =this.imageService.UploadImageToBucket(user.Email, HttpContext.Request.Form.Files[0]).Result;
+            
+            return this._accoutService.UpdateProfile(FullName,user.Email,imgUrl);
         }
 
-        [HttpGet("createToken")]
-        public void createToken()
+        [Authorize]
+        [HttpGet("logout")]
+        public void logout()
         {
-            var token = JwtBuilder.Create()
-                      .WithAlgorithm(new HMACSHA256Algorithm()) // symmetric
-                      .WithSecret("GQDstcKsx0NHjPOuXOYg5MbeJ1XT0uFiwDVvVBrk")
-                      .AddClaim("exp", DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds())
-                      .AddClaim("claim2", "claim2-value")
-                      .Encode();
-
-            System.Diagnostics.Debug.WriteLine(token);
-        }
-
-        [HttpGet("validate/{token}")]
-        public void createToken(string token)
-        {
-            const string secret = "GQDstcKsx0NHjPOuXOYg5MbeJ1XT0uFiwDVvVBrk";
-
-            try
-            {
-                IJsonSerializer serializer = new JsonNetSerializer();
-                IDateTimeProvider provider = new UtcDateTimeProvider();
-                IJwtValidator validator = new JwtValidator(serializer, provider);
-                IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
-                IJwtAlgorithm algorithm = new HMACSHA256Algorithm(); // symmetric
-                IJwtDecoder decoder = new JwtDecoder(serializer, validator, urlEncoder, algorithm);
-
-                var json = decoder.Decode(token, secret, verify: true);
-                Console.WriteLine(json);
-            }
-            catch (TokenExpiredException)
-            {
-                Console.WriteLine("Token has expired");
-            }
-            catch (SignatureVerificationException)
-            {
-                Console.WriteLine("Token has invalid signature");
-            }
-
-            System.Diagnostics.Debug.WriteLine(token);
+            int TokenId = (int)HttpContext.Items["TokenId"];
+            this._accoutService.Logout(TokenId);
         }
     }
 }

@@ -11,6 +11,7 @@ using JustTradeIt.Software.API.Models.InputModels;
 using JustTradeIt.Software.API.Models.Models;
 using JustTradeIt.Software.API.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace JustTradeIt.Software.API.Repositories.Implementations
 {
@@ -52,24 +53,23 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
 
         public UserDto GetProfileInformation(string email)
         {
-            User user = context.User.Where(u => u.Email == email).First(); 
-            System.Diagnostics.Debug.WriteLine(this.context.User.Count());
+            User user = context.User.Include(u=>u.JwtToken).Where(u => u.Email == email).First(); 
             UserDto userDto = this._mapper.Map<UserDto>(user);
             return userDto;
         }
 
         public UserDto GetUserInformation(string userIdentifier)
         {
-             User user= this.context.User.FirstOrDefault(x => x.Id == int.Parse(userIdentifier));
+            User user= this.context.User.Include(u=>u.JwtToken).FirstOrDefault(x => x.Id == int.Parse(userIdentifier));
             return this._mapper.Map<UserDto>(user);
         }
 
-        public UserDto UpdateProfile(ProfileInputModel profile)
+        public UserDto UpdateProfile(string FullName,string email,string imgUrl)
         {
-            User user = context.User.Where(u => u.Id == 1).First();
-            // To be implemented with JWT
-            user.FullName = profile.FullName;
-            // user.ProfileImageUrl = profile.ProfileImage; //To be implemented with Image implementation
+            User user = context.User.Where(u => u.Email.Equals(email)).First();
+            user.FullName =FullName;
+            user.ProfileImageUrl = imgUrl;
+            this.context.User.Update(user);
             this.context.SaveChanges();
             return this._mapper.Map<UserDto>(user);
         }
@@ -77,13 +77,28 @@ namespace JustTradeIt.Software.API.Repositories.Implementations
 
         public bool findByEmail(string email)
         {
-            return this.context.User.Any(u => u.Email == email);
+            return this.context.User.Include(u => u.JwtToken).Any(u => u.Email == email);
         }
 
         public User getUserByEmail(string email)
         {
-            return this.context.User.Where(u => u.Email.Equals(email)).First();
+            return this.context.User.Include(u => u.JwtToken).Where(u => u.Email.Equals(email)).First();
         }
+        
+        public User getUserByIdentifier(int identifier)
+        {
+            return this.context.User.Include(u => u.JwtToken).Where(u => u.Id==identifier).First();
+        }
+
+        public User getUserToNotifyByTrade(string email,int tradeId)
+        {
+            Trade trade = this.context.Trade.Include(t => t.Sender).Include(t => t.Receiver).Where(t => t.Id == tradeId).First();
+            if (trade.Receiver.Email.Equals(email))
+                return trade.Sender;
+            else
+                return trade.Receiver;
+        }
+
         public string HashUsingPbkdf2(string password)
         {
             using var bytes = new Rfc2898DeriveBytes(password, Convert.FromBase64String("CGYzqeN4plZekNC88Umm1Q=="), 10000, HashAlgorithmName.SHA256);

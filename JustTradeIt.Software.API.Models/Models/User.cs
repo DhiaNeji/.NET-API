@@ -23,6 +23,7 @@ namespace JustTradeIt.Software.API.Models.Models
 
         public virtual ICollection<TradeItem> RelatedTradeItems { get; set; }
 
+        public virtual JwtToken JwtToken { get; set; }
         public User( string PublicIdentifier,string FullName,string Email,string profileImageUrl,string hashedPassword)
         {
             this.PublicIdentifier = PublicIdentifier;

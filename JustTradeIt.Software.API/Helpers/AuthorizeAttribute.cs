@@ -16,16 +16,22 @@ namespace JustTradeIt.Software.API.Models.Helpers
         public void OnAuthorization(AuthorizationFilterContext context)
         {
             UserDto user = (UserDto)context.HttpContext.Items["User"];
-            int blackListed= (int)context.HttpContext.Items["BlackListed"];
+
             if (user == null)
             {
                 // not logged in
                 context.Result = new JsonResult(new { Message = "Unauthorized" }) { StatusCode = StatusCodes.Status401Unauthorized };
             }
-            if(blackListed==1)
+            else
             {
-                context.Result = new JsonResult(new { Message = "User BlackListed" }) { StatusCode = StatusCodes.Status401Unauthorized };
+                int blackListed = (int)context.HttpContext.Items["BlackListed"];
+                if (blackListed == 1)
+                {
+                    context.Result = new JsonResult(new { Message = "Unauthorized" }) { StatusCode = StatusCodes.Status401Unauthorized };
+                }
             }
         }
-    }
+            
+        }
+    
 }

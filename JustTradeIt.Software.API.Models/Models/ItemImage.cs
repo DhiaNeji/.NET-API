@@ -15,7 +15,7 @@ namespace JustTradeIt.Software.API.Models.Models
 
         public ItemImage(String imageUrl)
         {
-            this.ImageUrl = ImageUrl;
+            this.ImageUrl = imageUrl;
         }
     }
 }

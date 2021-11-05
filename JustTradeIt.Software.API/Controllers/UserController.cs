@@ -1,14 +1,15 @@
 using JustTradeIt.Software.API.Models.DTOs;
+using JustTradeIt.Software.API.Models.Helpers;
 using JustTradeIt.Software.API.Repositories.Interfaces;
 using JustTradeIt.Software.API.Services.Implementations;
 using JustTradeIt.Software.API.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-
+ 
 namespace JustTradeIt.Software.API.Controllers
 {
     [Route("api/users")]
+    [Authorize]
     [ApiController]
 
     public class UserController : ControllerBase

@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+    <PackageReference Include="AWSSDK.Core" Version="3.7.3.33" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.3.13" />
     <PackageReference Include="JWT" Version="8.4.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.11" />

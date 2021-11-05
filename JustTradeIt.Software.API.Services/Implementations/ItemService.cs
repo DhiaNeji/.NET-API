@@ -36,7 +36,7 @@ namespace JustTradeIt.Software.API.Services.Implementations
 
         public void RemoveItem(string email, string itemIdentifier)
         {
-            this._itemRepository.RemoveItem("Test", itemIdentifier);
+            this._itemRepository.RemoveItem(email, itemIdentifier);
         }
 
     }

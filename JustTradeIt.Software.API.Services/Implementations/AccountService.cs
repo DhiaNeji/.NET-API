@@ -14,14 +14,16 @@ namespace JustTradeIt.Software.API.Services.Implementations
     {
         private IUserRepository userRepository;
 
-        private TokenService tokenService;
+        private ITokenRepository tokenRepository;
+        private ITokenService tokenService;
         private readonly IMapper _mapper;
 
-        public AccountService(IUserRepository userRepository,TokenService tokenService,IMapper mapper)
+        public AccountService(IUserRepository userRepository,TokenService tokenService,IMapper mapper,ITokenRepository tokenRepository)
         {
             this.userRepository = userRepository;
             this.tokenService = tokenService;
             this._mapper = mapper;
+            this.tokenRepository = tokenRepository;
         }
         public UserDto AuthenticateUser(LoginInputModel loginInputModel)
         {
@@ -32,7 +34,7 @@ namespace JustTradeIt.Software.API.Services.Implementations
             if (user.hashedPassword != HashedPassword)
                 return null;
             string token = this.tokenService.GenerateJwtToken(this._mapper.Map<UserDto>(user));
-            return this._mapper.Map<UserDto>(user);
+            return this._mapper.Map<UserDto>(this.userRepository.getUserByEmail(loginInputModel.Email));
         }
 
         public UserDto CreateUser(RegisterInputModel inputModel)
@@ -50,13 +52,12 @@ namespace JustTradeIt.Software.API.Services.Implementations
 
         public void Logout(int tokenId)
         {
-            throw new System.NotImplementedException();
+            this.tokenRepository.VoidToken(tokenId);
         }
 
-        public UserDto UpdateProfile(ProfileInputModel profile)
+        public UserDto UpdateProfile(string FullName, string email, string imgUrl)
         {
-            System.Diagnostics.Debug.WriteLine("eee");
-            return this.userRepository.UpdateProfile(profile);
+            return this.userRepository.UpdateProfile(FullName,email,imgUrl);
         }
         public string HashUsingPbkdf2(string password)
         {

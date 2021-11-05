@@ -35,7 +35,7 @@ namespace JustTradeIt.Software.API.Services.Implementations
         public string GenerateJwtToken(UserDto user)
         {
             string token= this.GenerateToken(user.Email,user.FullName,user.Identifier);
-            this._tokenRepository.CreateNewToken(token);
+            this._tokenRepository.CreateNewToken(user.Email,token);
             return token;
         }
 

@@ -12,6 +12,7 @@ using System.Collections.Generic;
 namespace JustTradeIt.Software.API.Controllers
 {
     [Route("api/items")]
+    [Authorize]
     [ApiController]
     public class ItemController : ControllerBase
     {
@@ -23,20 +24,18 @@ namespace JustTradeIt.Software.API.Controllers
             this._ItemService = itemService;
             this._ItemRepository=itemRepository;
         }
-      
+
         [HttpGet("{pageSize}/{pageNumber}/{ascendingOrder}")]
         public Envelope<ItemDto> getAvailableItems(int pageSize, int pageNumber, bool ascendingOrder)
         {
             return this._ItemService.GetItems(pageSize, pageNumber, ascendingOrder);
         }
-
         [HttpGet("{identifier}")]
         public ItemDetailsDto getItemByIdentifier(string identifier)
         {
             return this._ItemService.GetItemByIdentifier(identifier);
         }
 
-        [Authorize]
         [HttpPost]
         public ItemDto createNewItem(ItemInputModel itemInputModel)
         {
@@ -44,10 +43,11 @@ namespace JustTradeIt.Software.API.Controllers
             return this._ItemService.AddNewItem(user.Email, itemInputModel);
         }
 
-        [HttpDelete("{itemIdentifier}/{email}")]
-        public void removeItemByIdentifier(string email,string itemIdentifier)
+        [HttpDelete("{itemIdentifier}")]
+        public void removeItemByIdentifier(string itemIdentifier)
         {
-            this._ItemService.RemoveItem(email, itemIdentifier);
+            UserDto user = (UserDto)HttpContext.Items["User"];
+            this._ItemService.RemoveItem(user.Email, itemIdentifier);
         }
     }
 }

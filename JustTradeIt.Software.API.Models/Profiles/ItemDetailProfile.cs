@@ -19,8 +19,6 @@ namespace JustTradeIt.Software.API.Models.Profiles
               .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
               .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.ItemImages))
               .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.ItemCondition.Description));
-            //Add the UserDTO
-
         }
     }
 }

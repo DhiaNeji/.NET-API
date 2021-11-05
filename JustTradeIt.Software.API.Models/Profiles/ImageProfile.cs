@@ -15,7 +15,7 @@ namespace JustTradeIt.Software.API.Models.Profiles
         {
             CreateMap<ItemImage, ImageDto>()
                 .ForMember(dest => dest.id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl));
+                .ForMember(dest => dest.imageUrl, opt => opt.MapFrom(src => src.ImageUrl));
         }
 
     }

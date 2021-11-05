@@ -8,10 +8,11 @@ namespace JustTradeIt.Software.API.Repositories.Interfaces
     {
         UserDto CreateUser(RegisterInputModel inputModel);
         UserDto AuthenticateUser(LoginInputModel loginInputModel);
-        UserDto UpdateProfile(ProfileInputModel profile);
+        UserDto UpdateProfile(string FullName,string email,string imgUrl);
         UserDto GetProfileInformation(string email);
         UserDto GetUserInformation(string userIdentifier);
         public User getUserByEmail(string email);
+        public User getUserToNotifyByTrade(string email, int tradeId);
 
     }
 }

@@ -18,6 +18,7 @@ using JustTradeIt.Software.API.Models.Models;
 using System.Net.Http;
 using System.Net;
 using System.Web.Http;
+using JustTradeIt.Software.API.Models.DTOs;
 
 namespace JustTradeIt.Software.API.Models.Helpers
 {
@@ -57,8 +58,9 @@ namespace JustTradeIt.Software.API.Models.Helpers
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
                 var userId = int.Parse(jwtToken.Claims.First(c => c.Type == "id").Value);
-                context.Items["User"] = userService.GetUserInformation(userId.ToString());
-
+                UserDto user= userService.GetUserInformation(userId.ToString());
+                context.Items["User"]= user;
+                context.Items["TokenId"]= user.TokenId;
                 if (tokenService.isTokenBlackListed(token))
                 {
                     context.Items["BlackListed"] = 1;

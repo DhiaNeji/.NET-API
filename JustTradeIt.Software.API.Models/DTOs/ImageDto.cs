@@ -9,6 +9,6 @@ namespace JustTradeIt.Software.API.Models.DTOs
    public class ImageDto
     {
         public int id { get; set; }
-        public string ImageUrl { get; set; }
+        public string imageUrl { get; set; }
     }
 }

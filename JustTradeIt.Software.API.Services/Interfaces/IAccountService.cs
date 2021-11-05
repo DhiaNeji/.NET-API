@@ -10,7 +10,7 @@ namespace JustTradeIt.Software.API.Services.Interfaces
         UserDto CreateUser(RegisterInputModel inputModel);
         UserDto AuthenticateUser(LoginInputModel loginInputModel);
         void Logout(int tokenId);
-        UserDto UpdateProfile(ProfileInputModel profile);
+        UserDto UpdateProfile(string FullName, string email, string imgUrl);
         UserDto GetProfileInformation(string email);
     }
 }

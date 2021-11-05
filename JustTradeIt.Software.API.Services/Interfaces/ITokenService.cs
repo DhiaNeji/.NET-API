@@ -7,5 +7,7 @@ namespace JustTradeIt.Software.API.Services.Interfaces
          string GenerateJwtToken(UserDto user);
 
         bool isTokenBlackListed(string tokenValue);
+
+
     }
 }

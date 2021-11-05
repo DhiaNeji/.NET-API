@@ -47,6 +47,8 @@ namespace JustTradeIt.Software.API
             services.AddTransient<ITokenRepository, TokenRepository>();
             services.AddTransient<AccountService, AccountService>();
             services.AddTransient<ItemService, ItemService>();
+            services.AddTransient<ImageService, ImageService>();
+            services.AddTransient<QueueService, QueueService>();
             services.AddTransient<UserService, UserService>();
             services.AddTransient<TradeService, TradeService>();
             services.AddTransient<TokenService, TokenService>();
